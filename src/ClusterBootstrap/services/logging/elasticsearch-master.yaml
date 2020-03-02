@@ -23,7 +23,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         elasticsearch-master: active
-      {% if cnf["elasticsearch"]["master_is_data"]} %}
+      {% if cnf["elasticsearch"]["master_is_data"] %}
       initContainers:
       - name: elasticsearch-sysctl
         image: alpine:3.9
@@ -58,16 +58,10 @@ spec:
               fieldPath: spec.nodeName
         - name: 'node.master'
           value: 'true'
-        {% if cnf["elasticsearch"]["master_is_data"]} %}
+        {% if cnf["elasticsearch"]["master_is_data"] %}
         - name: 'node.data'
           value: 'true'
         {% endif %}
-        - name: "discovery.zen.ping.unicast.hosts"
-          value: '
-            {%- for elasticsearch_node in cnf["elasticsearch_node"] -%}
-            {{elasticsearch_node}}{{"," if not loop.last}}
-            {%- endfor -%}
-          '
         - name: "http.port"
           value: '{{cnf["elasticsearch"]["port"]["http"]}}'
         - name: "transport.port"
@@ -86,9 +80,11 @@ spec:
         - containerPort: {{cnf["elasticsearch"]["port"]["transport"]}}
           name: transport
           protocol: TCP
+        {% if cnf["elasticsearch"]["master_is_data"] %}
         volumeMounts:
         - name: elasticsearch
           mountPath: /usr/share/elasticsearch/data
+        {% endif %}
       - name: elasticsearch-exporter
         image: '{{cnf["dockers"]["container"]["elasticsearch-exporter"]["fullname"]}}'
         args:
@@ -103,7 +99,7 @@ spec:
         - containerPort: {{cnf["elasticsearch"]["port"]["exporter"]}}
           name: web
           protocol: TCP
-      {% if cnf["elasticsearch"]["master_is_data"]} %}
+      {% if cnf["elasticsearch"]["master_is_data"] %}
       volumes:
       - name: elasticsearch
         hostPath:

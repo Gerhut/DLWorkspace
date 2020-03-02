@@ -24,7 +24,7 @@ spec:
         image: '{{cnf["dockers"]["container"]["kibana"]["fullname"]}}'
         env:
           - name: ELASTICSEARCH_HOSTS
-            value: "http://$(ELASTICSEARCH_SERVICE_HOST):$(ELASTICSEARCH_SERVICE_PORT)"
+            value: 'http://{{cnf["kubernetes_master_node"][0]}}:{{cnf["elasticsearch"]["port"]["http"]}}'
           - name: SERVER_PORT
             value: '{{cnf["elasticsearch"]["port"]["kibana"]}}'
         resources:

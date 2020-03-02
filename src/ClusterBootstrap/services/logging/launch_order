@@ -1,4 +1,5 @@
-elasticsearch.yaml
+elasticsearch-master.yaml
+elasticsearch-data.yaml
 fluentd-config.yaml
 fluentd.yaml
 kibana.yaml

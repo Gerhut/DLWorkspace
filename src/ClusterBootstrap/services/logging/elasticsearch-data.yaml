@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: elasticsearch-master
+  name: elasticsearch-data
   namespace: kube-system
   labels:
     app: elasticsearch
@@ -22,8 +22,7 @@ spec:
     spec:
       hostNetwork: true
       nodeSelector:
-        elasticsearch-master: active
-      {% if cnf["elasticsearch"]["master_is_data"]} %}
+        elasticsearch-data: active
       initContainers:
       - name: elasticsearch-sysctl
         image: alpine:3.9
@@ -43,7 +42,6 @@ spec:
         volumeMounts:
         - name: elasticsearch
           mountPath: /usr/share/elasticsearch/data
-      {% endif %}
       containers:
       - name: elasticsearch
         image: '{{cnf["dockers"]["container"]["elasticsearch"]["fullname"]}}'
@@ -56,18 +54,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: 'node.master'
-          value: 'true'
-        {% if cnf["elasticsearch"]["master_is_data"]} %}
         - name: 'node.data'
           value: 'true'
-        {% endif %}
         - name: "discovery.zen.ping.unicast.hosts"
-          value: '
-            {%- for elasticsearch_node in cnf["elasticsearch_node"] -%}
-            {{elasticsearch_node}}{{"," if not loop.last}}
-            {%- endfor -%}
-          '
+          value: '{{cnf["kubernetes_master_node"][0]}}'
         - name: "http.port"
           value: '{{cnf["elasticsearch"]["port"]["http"]}}'
         - name: "transport.port"
@@ -103,12 +93,10 @@ spec:
         - containerPort: {{cnf["elasticsearch"]["port"]["exporter"]}}
           name: web
           protocol: TCP
-      {% if cnf["elasticsearch"]["master_is_data"]} %}
       volumes:
       - name: elasticsearch
         hostPath:
           path: /data/elasticsearch
-      {% endif %}
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule

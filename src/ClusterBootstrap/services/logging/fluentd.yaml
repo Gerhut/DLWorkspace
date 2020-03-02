@@ -31,9 +31,9 @@ spec:
         - name: FLUENT_ELASTICSEARCH_SCHEME
           value: "http"
         - name: FLUENT_ELASTICSEARCH_HOST
-          value: '$(ELASTICSEARCH_SERVICE_HOST)'
+          value: '{{cnf["kubernetes_master_node"][0]}}'
         - name: FLUENT_ELASTICSEARCH_PORT
-          value: '$(ELASTICSEARCH_SERVICE_PORT)'
+          value: '{{cnf["elasticsearch"]["port"]["http"]}}'
         - name: FLUENTD_PROMETHEUS_PORT
           value: '{{cnf["fluentd"]["port"]}}'
         resources:
