@@ -17,11 +17,12 @@ default_config_parameters = {
 
     "elasticsearch": {
         "port": {
-            "http": 9200,
-            "transport": 9300,
+            "http": 9400,
+            "transport": 9500,
             "exporter": 9114,
             "kibana": 5601,
         },
+        "master_holds_data": True
     },
 
     "fluentd": {
@@ -249,7 +250,8 @@ default_config_parameters = {
         "prometheus": "etcd_node_1",
         "alert-manager": "etcd_node_1",
         "watchdog": "etcd_node_1",
-        "elasticsearch": "elasticsearch_node",
+        "elasticsearch-master": "etcd_node_1",
+        "elasticsearch-data": "elasticsearch_node",
         "kibana": "etcd_node_1",
         "mysql": "etcd_node_1",
         "mysql-server": "mysqlserver_node",
