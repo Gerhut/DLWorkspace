@@ -1,12 +1,12 @@
 import React, {
   FunctionComponent,
   useCallback,
-  useEffect,
   useRef,
   useState,
 } from 'react';
 import MaterialTable, { Options, MaterialTableProps } from 'material-table';
-import { zipWith } from 'lodash';
+
+import useTableData from '../../../hooks/useTableData';
 
 import { Job } from '../utils';
 
@@ -30,7 +30,8 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({
   ...props
 }) => {
   const [pageSize, setPageSize] = useState(defaultPageSize);
-  const [data, setData] = useState(jobs);
+
+  const data = useTableData(jobs);
 
   const detailPanel = useCallback((job: Job) => {
     return <DetailPanel job={job}/>;
@@ -52,19 +53,6 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({
     pageSize: defaultPageSize,
     selection
   }).current;
-
-  useEffect(() => {
-    setData((data) => {
-      if (data === undefined) return jobs;
-      if (jobs === undefined) return data;
-      return zipWith(data, jobs, (currentJob, newJob) => {
-        if (currentJob === undefined) return newJob;
-        if (newJob === undefined) return undefined;
-        newJob.tableData = currentJob.tableData
-        return newJob
-      }).filter(Boolean)
-    })
-  }, [jobs])
 
   return (
     <MaterialTable
