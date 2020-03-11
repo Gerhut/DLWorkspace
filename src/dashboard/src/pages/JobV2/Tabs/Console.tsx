@@ -1,7 +1,8 @@
 import React, {
   FunctionComponent,
   useEffect,
-  useMemo
+  useMemo,
+  useRef
 } from 'react';
 import {
   Box
@@ -12,7 +13,6 @@ import { mergeWith } from 'lodash';
 
 import CodeBlock from '../../../components/CodeBlock';
 import Loading from '../../../components/Loading';
-import useConstant from '../../../hooks/useConstant';
 
 import useRouteParams from '../useRouteParams';
 
@@ -20,8 +20,8 @@ const Console: FunctionComponent = () => {
   const { clusterId, jobId } = useRouteParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { data, loading, error, get } = useFetch(
-    `/api/clusters/${clusterId}/jobs/${jobId}/log`, useConstant({
-      onNewData (currentData, newData) {
+    `/api/clusters/${clusterId}/jobs/${jobId}/log`, useRef({
+      onNewData (currentData: any, newData: any) {
         if (currentData === undefined || currentData.cursor == null) {
           return newData;
         }
@@ -42,7 +42,7 @@ const Console: FunctionComponent = () => {
           cursor: newData.cursor
         };
       }
-    }), [clusterId, jobId]);
+    }).current, [clusterId, jobId]);
 
   const log = useMemo<{ [podName: string]: string } | string | undefined>(() => {
     if (data !== undefined) {
