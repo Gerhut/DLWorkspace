@@ -27,11 +27,8 @@ default_config_parameters = {
         },
     },
 
-    "azure_blob_log": {
+    "log_analytics": {
         "enabled": False,
-        "port": {
-            "adapter": 6200
-        }
     },
 
     "influxdb_port": "8086",

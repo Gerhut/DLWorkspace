@@ -25,8 +25,8 @@ data:
     {% if cnf["elasticsearch"]["enabled"] -%}
     @INCLUDE output-elasticsearch.conf
     {%- endif %}
-    {% if cnf["azure_blob_log"]["enabled"] -%}
-    @INCLUDE output-azure-blob.conf
+    {% if cnf["log_analytics"]["enabled"] -%}
+    @INCLUDE output-azure.conf
     {%- endif %}
 
   input-kubernetes.conf: |
@@ -86,17 +86,13 @@ data:
         Replace_Dots    On
         Retry_Limit     False
 
-  output-azure-blob.conf: |
+  output-azure.conf: |
     [OUTPUT]
-        Name             http
-        Match            jobs.*
-        Host             127.0.0.1
-        Port             ${FLUENT_AZURE_BLOB_ADAPTER_PORT}
-        Format           json_lines
-        header_tag       X-Tag
-        json_date_key    timestamp
-        json_date_format iso8601
-        Retry_Limit      False
+        Name            azure
+        Match           *
+        Customer_ID     ${FLUENT_AZURE_CUSTOMER_ID}
+        Shared_Key      ${FLUENT_AZURE_SHARED_KEY}
+        Log_Type        ${FLUENT_AZURE_LOG_TYPE}
 
   parsers.conf: |
     [PARSER]
