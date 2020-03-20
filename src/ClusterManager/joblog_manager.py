@@ -34,7 +34,7 @@ def create_log(logdir='/var/log/dlworkspace'):
         logging.config.dictConfig(logging_config)
 
 
-_get_job_log_enabled = config.get('logging') in ['azure_blob', 'elasticsearch']
+_get_job_log_enabled = config.get('logging') in ['elasticsearch', 'log_analytics']
 _extract_job_log_legacy = config.get('__extract_job_log_legacy', not _get_job_log_enabled)
 
 

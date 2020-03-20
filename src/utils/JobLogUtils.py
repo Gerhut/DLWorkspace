@@ -1,8 +1,6 @@
 import logging
 
 from itertools import groupby
-from json import loads
-from json.decoder import JSONDecodeError
 
 from config import config
 
@@ -16,78 +14,56 @@ def TryParseCursor(cursor):
         logger.exception('Failed to parse cursor %s'.format(cursor))
         return None
 
+if config.get("logging") == 'log_analytics':
+    logger.info('Azure Log Analytics log backend is enabled.')
+    from azure.common.credentials import ServicePrincipalCredentials
+    from azure.loganalytics import LogAnalyticsDataClient
 
-if config.get("logging") == 'azure_blob':
-    logger.info('Azure Blob log backend is enabled.')
-
-    from azure.storage.blob import AppendBlobService
-    from azure.common import AzureHttpError
-
-    append_blob_service = AppendBlobService(
-        connection_string=config['azure_blob_log']['connection_string'])
-    container_name = config['azure_blob_log']['container_name']
-
-    CHUNK_SIZE = 1024 * 1024  # Assume each line in log is no more then 1MB
+    _credentials = ServicePrincipalCredentials(
+        client_id=config["activeDirectory"]["clientId"],
+        secret=config["activeDirectory"]["clientSecret"],
+        tenant=config["activeDirectory"]["tenant"],
+        resource='https://api.loganalytics.io',
+    )
 
     def GetJobLog(jobId, cursor=None, size=None):
         try:
-            blob_name = 'jobs.' + jobId
+            with LogAnalyticsDataClient(_credentials) as dataClient:
+                query = [
+                    config['log_analytics']['tableName'] + "_CL",
+                    'where kubernetes_labels_jobId_g == "{}"'.format(jobId),
+                    'extend cursor=toint(_timestamp_d) + time_nsec_d / decimal(1e9)',
+                    'sort by cursor asc',
+                    'project cursor, kubernetes_pod_name_s, stream_s, log_s'
+                ]
 
-            lines = []
+                if cursor is not None:
+                    query.append('where cursor > decimal({})'.format(cursor))
+                if size is not None:
+                    query.append('limit {}'.format(size))
 
-            try:
-                blob = append_blob_service.get_blob_properties(
-                    container_name=container_name,
-                    blob_name=blob_name)
-                start_range = max(0, blob.properties.content_length - CHUNK_SIZE)
-                chunk = append_blob_service.get_blob_to_bytes(
-                    container_name=container_name,
-                    blob_name=blob_name,
-                    start_range=start_range)
-                content = chunk.content.decode(
-                    encoding='utf-8', errors='ignore')
+                query = '\n| '.join(query)
+                results = dataClient.query(
+                    workspace_id=config["log_analytics"]["workspaceId"],
+                    body={"query": query})
 
-                content_lines = content.split('\n')
-                for i, content_line in enumerate(content_lines, 1):
-                    try:
-                        line = loads(content_line)
-                        lines.append(line)
-                    except JSONDecodeError:
-                        if i == 1:
-                            # Normal case, invalid JSON at the start of the log:
-                            #     Directly continue to next line
-                            pass
-
-                        # Bad case, invalid JSON in the middle / tail of the log:
-                        #     Log it down and parse next lines
-                        logger.exception(
-                            'Failed to parse log line {} of job {}: {}'.format(
-                                i, jobId, content_line))
-            except AzureHttpError as error:
-                if error.status_code in (
-                        404,  # Not Found (No such job)
-                        416,  # Range Not Satisfiable (No more logs)
-                ):
-                    return ({}, None)
-                else:
-                    raise
+            rows = results.tables[0].rows
 
             pod_logs = dict()
-            for pod_name, pod_lines in groupby(
-                    lines, lambda line: line['kubernetes']['pod_name']):
-                pod_lines = sorted(pod_lines, key=lambda line: line['time'])
-                pod_logs[pod_name] = ''.join(
-                    pod_line['log'] for pod_line in pod_lines)
+            for pod_name, pod_rows in groupby(rows, lambda row: row[1]):
+                pod_logs[pod_name] = ''.join(pod_row[3] for pod_row in pod_rows)
 
-            return (pod_logs, None)
+            if len(rows) > 0:
+                cursor = rows[-1][0]
+
+            return (pod_logs, cursor)
         except Exception:
             logger.exception(
-                "Failed to request logs of job {} from azure blob".format(
+                "Failed to request logs of job {} from Azure Log Analytics".format(
                     jobId))
             return ({}, None)
 elif config.get("logging") == 'elasticsearch':
     logger.info('Elasticsearch log backend is enabled.')
-
     from elasticsearch import Elasticsearch
 
     def GetJobLog(jobId, cursor=None, size=None):
