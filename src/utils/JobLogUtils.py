@@ -55,6 +55,8 @@ if config.get("logging") == 'log_analytics':
 
             if len(rows) > 0:
                 cursor = rows[-1][0]
+            else:
+                cursor = None
 
             return (pod_logs, cursor)
         except Exception:
