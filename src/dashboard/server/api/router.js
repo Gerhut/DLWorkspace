@@ -88,3 +88,6 @@ router.delete('/teams/:teamId/templates/:templateName',
 
 router.get('/error.gif',
   require('./controllers/error'))
+
+router.all('/clusters/:clusterId/proxy/grafana/:url(.*)',
+  require('./controllers/cluster/proxy/grafana'))

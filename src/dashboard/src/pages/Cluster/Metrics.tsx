@@ -17,6 +17,7 @@ interface Props {
 
 const Metrics: FunctionComponent<Props> = ({ data: { config } }) => {
   const { selectedTeam } = useContext(TeamsContext);
+  const url = `${config['grafana']}/dashboard/db/per-vc-gpu-statistic?var-vc_name=${selectedTeam}`
 
   return (
     <>
@@ -24,7 +25,7 @@ const Metrics: FunctionComponent<Props> = ({ data: { config } }) => {
         <CardHeader title="Team GPU Usage"/>
         <CardMedia
           component="iframe"
-          src={`${config['grafana']}/dashboard/db/per-vc-gpu-statistic?var-vc_name=${selectedTeam}`}
+          src={`/redirect.html?${encodeURIComponent(url)}`}
           height="480"
           frameBorder="0"
         />
