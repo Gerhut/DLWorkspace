@@ -231,7 +231,13 @@ class Cluster extends Service {
     if (cursor !== undefined) {
       params.set('cursor', cursor)
     }
-    const response = await this.fetch('/GetJobLog?' + params)
+
+    const headers = Object.create(null)
+    const azureAccessToken = this.context.cookies.get('azure.access_token')
+    if (azureAccessToken != null) {
+      headers['X-Azure-Access-Token'] = azureAccessToken
+    }
+    const response = await this.fetch('/GetJobLog?' + params, { headers })
     const { log, cursor: nextCursor } = await response.json()
     this.context.assert(Object.keys(log).length > 0, 404)
     return { log, cursor: nextCursor }

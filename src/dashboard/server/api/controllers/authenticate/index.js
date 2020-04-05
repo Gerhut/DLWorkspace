@@ -27,7 +27,8 @@ const getAuthenticationUrl = context => {
     response_type: 'code',
     redirect_uri: getUriWithoutQuery(context),
     response_mode: 'query',
-    scope: 'openid profile email https://api.loganalytics.io/.default',
+    scope: 'openid profile email',
+    resource: 'https://api.loganalytics.io',
     state: context.querystring
   })
   return OAUTH2_URL + '/authorize?' + params
@@ -42,6 +43,7 @@ const getTokens = async context => {
   const params = new URLSearchParams({
     client_id: activeDirectoryConfig.clientId,
     scope: 'openid profile email',
+    resource: 'https://api.loganalytics.io',
     code,
     redirect_uri: getUriWithoutQuery(context),
     grant_type: 'authorization_code',

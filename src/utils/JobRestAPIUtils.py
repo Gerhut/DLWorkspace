@@ -598,7 +598,7 @@ def isBase64(s):
         pass
     return False
 
-_get_job_log_enabled = config.get('logging') in ['azure_blob', 'elasticsearch']
+_get_job_log_enabled = config.get('logging') in ['elasticsearch', 'log_analytics']
 _extract_job_log_legacy = config.get('__extract_job_log_legacy', not _get_job_log_enabled)
 _get_job_log_legacy = config.get('__get_job_log_legacy', _extract_job_log_legacy)
 
@@ -660,7 +660,7 @@ def GetJobStatus(jobId):
     dataHandler.Close()
     return result
 
-def GetJobLog(userName, jobId, cursor=None, size=100):
+def GetJobLog(userName, jobId, cursor=None, size=100, **kwargs):
     dataHandler = DataHandler()
     jobs = dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
@@ -683,7 +683,7 @@ def GetJobLog(userName, jobId, cursor=None, size=100):
                 except:
                     pass
             elif _get_job_log_enabled:
-                (pod_logs, cursor) = UtilsGetJobLog(jobId, cursor, size)
+                (pod_logs, cursor) = UtilsGetJobLog(jobId, cursor, size, **kwargs)
 
                 return {
                     "log": pod_logs,

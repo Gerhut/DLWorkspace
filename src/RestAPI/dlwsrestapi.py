@@ -458,13 +458,18 @@ class GetJobLog(Resource):
         self.get_parser.add_argument("jobId", required=True)
         self.get_parser.add_argument("userName", required=True)
         self.get_parser.add_argument("cursor")
+        self.get_parser.add_argument("X-Azure-Access-Token", location="headers")
 
     def get(self):
         args = self.get_parser.parse_args()
         jobId = args["jobId"]
         userName = args["userName"]
         cursor = args["cursor"]
-        return JobRestAPIUtils.GetJobLog(userName, jobId, cursor)
+
+        kwargs = dict()
+        if args["X-Azure-Access-Token"] is not None:
+            kwargs['access_token'] = args["X-Azure-Access-Token"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId, cursor, **kwargs)
 
 
 @api.resource("/GetJobStatus")

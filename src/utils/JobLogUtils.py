@@ -16,19 +16,26 @@ def TryParseCursor(cursor):
 
 if config.get("logging") == 'log_analytics':
     logger.info('Azure Log Analytics log backend is enabled.')
-    from azure.common.credentials import ServicePrincipalCredentials
+    from azure.common.credentials import (
+        BasicTokenAuthentication,
+        ServicePrincipalCredentials,
+    )
     from azure.loganalytics import LogAnalyticsDataClient
 
-    _credentials = ServicePrincipalCredentials(
+    fallback_credentials = ServicePrincipalCredentials(
         client_id=config["activeDirectory"]["clientId"],
         secret=config["activeDirectory"]["clientSecret"],
         tenant=config["activeDirectory"]["tenant"],
         resource='https://api.loganalytics.io',
     )
 
-    def GetJobLog(jobId, cursor=None, size=None):
+    def GetJobLog(jobId, cursor=None, size=None, *, access_token=None):
         try:
-            with LogAnalyticsDataClient(_credentials) as dataClient:
+            if access_token is not None:
+                credentials = BasicTokenAuthentication({'access_token': access_token})
+            else:
+                credentials = fallback_credentials
+            with LogAnalyticsDataClient(credentials) as dataClient:
                 query = [
                     config['log_analytics']['table_name'] + "_CL",
                     'where kubernetes_labels_jobId_g == "{}"'.format(jobId),
