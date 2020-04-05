@@ -7,5 +7,7 @@ const OAUTH2_URL = `https://login.microsoftonline.com/${activeDirectoryConfig.te
 /** @type {import('koa').Middleware} */
 module.exports = async context => {
   context.cookies.set('token')
+  context.cookies.set('azure.access_token')
+  context.cookies.set('azure.refresh_token')
   return context.redirect(OAUTH2_URL + '/logout')
 }

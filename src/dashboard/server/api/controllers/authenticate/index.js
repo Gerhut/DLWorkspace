@@ -27,7 +27,7 @@ const getAuthenticationUrl = context => {
     response_type: 'code',
     redirect_uri: getUriWithoutQuery(context),
     response_mode: 'query',
-    scope: 'openid profile email',
+    scope: 'openid profile email https://api.loganalytics.io/.default',
     state: context.querystring
   })
   return OAUTH2_URL + '/authorize?' + params
@@ -37,7 +37,7 @@ const getAuthenticationUrl = context => {
  * @param {import('koa').Context} context
  * @return {Promise}
  */
-const getDecodedIdToken = async context => {
+const getTokens = async context => {
   const { code } = context.query
   const params = new URLSearchParams({
     client_id: activeDirectoryConfig.clientId,
@@ -57,19 +57,25 @@ const getDecodedIdToken = async context => {
 
   context.assert(data['error'] == null, 502, data['error'])
 
-  return jwt.decode(data['id_token'])
+  return {
+    accessToken: data['access_token'],
+    refreshToken: data['refresh_token'],
+    idToken: jwt.decode(data['id_token'])
+  }
 }
 
 /** @type {import('koa').Middleware} */
 module.exports = async context => {
   if (context.query.code != null) {
     context.log.info({ query: context.query }, 'Authentication succeessful callback')
-    const idToken = await getDecodedIdToken(context)
+    const { accessToken, refreshToken, idToken } = await getTokens(context)
     context.log.info(idToken, 'Id token')
 
     const user = User.fromIdToken(context, idToken)
 
     context.cookies.set('token', user.toCookieToken())
+    context.cookies.set('azure.access_token', accessToken)
+    context.cookies.set('azure.refresh_token', refreshToken)
 
     try {
       const stateParams = new URLSearchParams(context.query.state)
