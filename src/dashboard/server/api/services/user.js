@@ -57,8 +57,6 @@ class User extends Service {
     const user = new User(context, payload['email'])
     user.givenName = payload['givenName']
     user.familyName = payload['familyName']
-    user.uid = payload['uid']
-    user.gid = payload['gid']
     return user
   }
 
@@ -85,10 +83,8 @@ class User extends Service {
   toCookieToken () {
     return jwt.sign({
       email: this.email,
-      uid: this.uid,
-      gid: this.gid,
-      familyName: this.familyName,
-      givenName: this.givenName
+      givenName: this.givenName,
+      familyName: this.familyName
     }, sign)
   }
 
@@ -96,10 +92,8 @@ class User extends Service {
     return {
       email: this.email,
       password: this.token.toString('hex'),
-      uid: this.uid,
-      gid: this.gid,
-      familyName: this.familyName,
-      givenName: this.givenName
+      givenName: this.givenName,
+      familyName: this.familyName
     }
   }
 }
