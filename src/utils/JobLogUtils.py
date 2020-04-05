@@ -30,7 +30,7 @@ if config.get("logging") == 'log_analytics':
         try:
             with LogAnalyticsDataClient(_credentials) as dataClient:
                 query = [
-                    config['log_analytics']['tableName'] + "_CL",
+                    config['log_analytics']['table_name'] + "_CL",
                     'where kubernetes_labels_jobId_g == "{}"'.format(jobId),
                     'extend cursor=toint(_timestamp_d) + time_nsec_d / decimal(1e9)',
                     'sort by cursor asc',
@@ -44,7 +44,7 @@ if config.get("logging") == 'log_analytics':
 
                 query = '\n| '.join(query)
                 results = dataClient.query(
-                    workspace_id=config["log_analytics"]["workspaceId"],
+                    workspace_id=config["log_analytics"]["workspace_id"],
                     body={"query": query})
 
             rows = results.tables[0].rows

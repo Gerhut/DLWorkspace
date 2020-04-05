@@ -47,11 +47,11 @@ spec:
         {%- endif %}
         {% if cnf["log_analytics"]["enabled"] -%}
         - name: FLUENT_AZURE_CUSTOMER_ID
-          value: '{{cnf["log_analytics"]["workspaceId"]}}'
+          value: '{{cnf["log_analytics"]["workspace_id"]}}'
         - name: FLUENT_AZURE_SHARED_KEY
           value: '{{cnf["log_analytics"]["key"]}}'
         - name: FLUENT_AZURE_LOG_TYPE
-          value: '{{cnf["log_analytics"]["tableName"]}}'
+          value: '{{cnf["log_analytics"]["table_name"]}}'
         {%- endif %}
         volumeMounts:
         - name: varlog
